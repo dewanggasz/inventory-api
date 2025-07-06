@@ -1,4 +1,4 @@
-import { History } from 'lucide-react';
+import { History, Edit } from 'lucide-react';
 
 const getStatusColor = (status) => {
   switch (status) {
@@ -15,7 +15,7 @@ const getStatusColor = (status) => {
   }
 };
 
-function ItemCard({ item, onViewHistory }) {
+function ItemCard({ item, onViewHistory, onUpdateStatus }) {
   if (!item) return null;
 
   const { name, code, category, location, latestStatus } = item;
@@ -61,13 +61,20 @@ function ItemCard({ item, onViewHistory }) {
         </div>
       </div>
 
-      <div className="mt-6 border-t border-gray-200 pt-4">
+      <div className="mt-6 border-t border-gray-200 pt-4 flex space-x-2">
         <button
           onClick={() => onViewHistory(code)}
           className="w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors"
         >
           <History size={16} className="mr-2" />
-          Lihat Riwayat
+          Riwayat
+        </button>
+        <button
+          onClick={() => onUpdateStatus(item)}
+          className="w-full flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+        >
+          <Edit size={16} className="mr-2" />
+          Ubah Status
         </button>
       </div>
     </div>

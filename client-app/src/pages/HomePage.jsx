@@ -5,6 +5,7 @@ import Alert from '../components/Alert';
 import LoadingSpinner from '../components/LoadingSpinner';
 import BarcodeScanner from '../components/BarcodeScanner';
 import HistoryModal from '../components/HistoryModal';
+import UpdateStatusModal from '../components/UpdateStatusModal';
 import { Camera, X } from 'lucide-react';
 
 function HomePage() {
@@ -16,8 +17,10 @@ function HomePage() {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [historyData, setHistoryData] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [itemToUpdate, setItemToUpdate] = useState(null);
+  const [updateLoading, setUpdateLoading] = useState(false);
 
-  // PERBAIKAN: Fungsi pencarian generik
   const performSearch = useCallback(async (endpoint) => {
     setLoading(true);
     setItem(null);
@@ -32,18 +35,16 @@ function HomePage() {
     }
   }, []);
 
-  // Fungsi untuk pencarian manual berdasarkan KODE BARANG
   const handleManualSearch = (e) => {
     e.preventDefault();
     if (!searchTerm) return;
-    performSearch(`/items/${searchTerm}`); // <-- Menggunakan endpoint kode barang
+    performSearch(`/items/${searchTerm}`);
   };
 
-  // Fungsi untuk pencarian dari hasil SCAN BARCODE
   const handleScanSuccess = (decodedText) => {
     setSearchTerm(decodedText);
     setIsScannerOpen(false);
-    performSearch(`/items/scan/${decodedText}`); // <-- Menggunakan endpoint barcode
+    performSearch(`/items/scan/${decodedText}`);
   };
 
   const clearInput = () => {
@@ -66,6 +67,26 @@ function HomePage() {
     }
   };
 
+  const handleOpenUpdateModal = (itemForUpdate) => {
+    setItemToUpdate(itemForUpdate);
+    setIsUpdateModalOpen(true);
+  };
+
+  const handleUpdateStatus = async (itemId, data) => {
+    setUpdateLoading(true);
+    try {
+      await axiosClient.patch(`/items/${itemId}/status`, data);
+      setIsUpdateModalOpen(false);
+      // Refresh data barang yang ditampilkan setelah berhasil update
+      performSearch(`/items/scan/${item.barcode_path}`);
+    } catch (err) {
+      console.error("Gagal mengubah status:", err);
+      // Di sini bisa ditambahkan notifikasi error jika perlu
+    } finally {
+      setUpdateLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center pt-10 px-4">
       {isScannerOpen && (
@@ -80,6 +101,15 @@ function HomePage() {
           history={historyData}
           loading={historyLoading}
           onClose={() => setIsHistoryOpen(false)}
+        />
+      )}
+
+      {isUpdateModalOpen && (
+        <UpdateStatusModal
+          item={itemToUpdate}
+          loading={updateLoading}
+          onClose={() => setIsUpdateModalOpen(false)}
+          onUpdate={handleUpdateStatus}
         />
       )}
 
@@ -132,7 +162,7 @@ function HomePage() {
       <div className="w-full max-w-md mt-6">
         {loading && <div className="flex justify-center"><LoadingSpinner /></div>}
         {error && <Alert message={error} />}
-        {item && <ItemCard item={item} onViewHistory={handleViewHistory} />}
+        {item && <ItemCard item={item} onViewHistory={handleViewHistory} onUpdateStatus={handleOpenUpdateModal} />}
       </div>
     </div>
   );
