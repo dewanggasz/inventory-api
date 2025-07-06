@@ -6,8 +6,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 
-class User extends Authenticatable
+class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
 
@@ -44,7 +46,16 @@ class User extends Authenticatable
     ];
 
     /**
-     * Get all of the statuses for the User
+     * Method yang dibutuhkan oleh FilamentUser untuk otorisasi akses panel.
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        // Izinkan semua user dengan role 'admin' untuk mengakses panel
+        return $this->role === 'admin';
+    }
+
+    /**
+     * Relasi ke Status
      */
     public function statuses()
     {
@@ -52,7 +63,7 @@ class User extends Authenticatable
     }
 
     /**
-     * Get all of the logs for the User
+     * Relasi ke Log
      */
     public function logs()
     {
