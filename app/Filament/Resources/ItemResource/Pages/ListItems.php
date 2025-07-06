@@ -14,6 +14,14 @@ class ListItems extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
+
+            // -- Tombol Aksi Baru untuk Export --
+            Actions\Action::make('export_excel')
+                ->label('Export ke Excel')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('success')
+                ->url(route('items.export.excel'))
+                ->openUrlInNewTab(),
         ];
     }
 }
