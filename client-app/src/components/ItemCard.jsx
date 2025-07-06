@@ -1,6 +1,5 @@
-import React from 'react';
+import { History } from 'lucide-react';
 
-// Fungsi untuk mendapatkan warna badge berdasarkan status
 const getStatusColor = (status) => {
   switch (status) {
     case 'Baik':
@@ -10,13 +9,13 @@ const getStatusColor = (status) => {
     case 'Hilang':
       return 'bg-red-100 text-red-800';
     case 'Perbaikan':
-        return 'bg-blue-100 text-blue-800';
+      return 'bg-blue-100 text-blue-800';
     default:
       return 'bg-gray-100 text-gray-800';
   }
 };
 
-function ItemCard({ item }) {
+function ItemCard({ item, onViewHistory }) {
   if (!item) return null;
 
   const { name, code, category, location, latestStatus } = item;
@@ -32,7 +31,7 @@ function ItemCard({ item }) {
         )}
       </div>
       <p className="text-sm text-gray-500 mt-1">{code}</p>
-      
+
       <div className="mt-6 border-t border-gray-200 pt-4">
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
@@ -60,6 +59,16 @@ function ItemCard({ item }) {
             </>
           )}
         </div>
+      </div>
+
+      <div className="mt-6 border-t border-gray-200 pt-4">
+        <button
+          onClick={() => onViewHistory(code)}
+          className="w-full flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-4 rounded-lg transition-colors"
+        >
+          <History size={16} className="mr-2" />
+          Lihat Riwayat
+        </button>
       </div>
     </div>
   );

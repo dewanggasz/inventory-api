@@ -1,10 +1,11 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import axiosClient from '../api/axiosClient';
 import ItemCard from '../components/ItemCard';
 import Alert from '../components/Alert';
 import LoadingSpinner from '../components/LoadingSpinner';
 import BarcodeScanner from '../components/BarcodeScanner';
-import { Camera, X } from 'lucide-react'; // <-- Impor ikon
+import HistoryModal from '../components/HistoryModal';
+import { Camera, X } from 'lucide-react';
 
 function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -12,15 +13,17 @@ function HomePage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [historyData, setHistoryData] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
 
-  const performSearch = useCallback(async (code) => {
-    if (!code) return;
+  // PERBAIKAN: Fungsi pencarian generik
+  const performSearch = useCallback(async (endpoint) => {
     setLoading(true);
     setItem(null);
     setError('');
     try {
-      // Endpoint diubah menjadi /scan/ untuk konsistensi dengan scanner
-      const response = await axiosClient.get(`/items/scan/${code}`);
+      const response = await axiosClient.get(endpoint);
       setItem(response.data);
     } catch (err) {
       setError(err.response?.status === 404 ? 'Barang tidak ditemukan.' : 'Terjadi kesalahan.');
@@ -29,14 +32,18 @@ function HomePage() {
     }
   }, []);
 
+  // Fungsi untuk pencarian manual berdasarkan KODE BARANG
   const handleManualSearch = (e) => {
     e.preventDefault();
-    performSearch(searchTerm);
+    if (!searchTerm) return;
+    performSearch(`/items/${searchTerm}`); // <-- Menggunakan endpoint kode barang
   };
 
+  // Fungsi untuk pencarian dari hasil SCAN BARCODE
   const handleScanSuccess = (decodedText) => {
     setSearchTerm(decodedText);
     setIsScannerOpen(false);
+    performSearch(`/items/scan/${decodedText}`); // <-- Menggunakan endpoint barcode
   };
 
   const clearInput = () => {
@@ -45,13 +52,19 @@ function HomePage() {
     setError('');
   };
 
-  // useEffect ini akan memicu pencarian setiap kali searchTerm berubah
-  // dan scanner tidak sedang terbuka.
-  useEffect(() => {
-    if (!isScannerOpen && searchTerm) {
-      performSearch(searchTerm);
+  const handleViewHistory = async (itemCode) => {
+    setHistoryLoading(true);
+    setIsHistoryOpen(true);
+    setHistoryData([]);
+    try {
+      const response = await axiosClient.get(`/items/${itemCode}/history`);
+      setHistoryData(response.data);
+    } catch (err) {
+      console.error("Gagal mengambil riwayat:", err);
+    } finally {
+      setHistoryLoading(false);
     }
-  }, [searchTerm, isScannerOpen, performSearch]);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center pt-10 px-4">
@@ -59,6 +72,14 @@ function HomePage() {
         <BarcodeScanner
           onScanSuccess={handleScanSuccess}
           onClose={() => setIsScannerOpen(false)}
+        />
+      )}
+
+      {isHistoryOpen && (
+        <HistoryModal
+          history={historyData}
+          loading={historyLoading}
+          onClose={() => setIsHistoryOpen(false)}
         />
       )}
 
@@ -107,11 +128,11 @@ function HomePage() {
           </div>
         </div>
       </form>
-      
+
       <div className="w-full max-w-md mt-6">
         {loading && <div className="flex justify-center"><LoadingSpinner /></div>}
         {error && <Alert message={error} />}
-        {item && <ItemCard item={item} />}
+        {item && <ItemCard item={item} onViewHistory={handleViewHistory} />}
       </div>
     </div>
   );
