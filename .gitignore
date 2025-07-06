@@ -14,3 +14,8 @@
 node_modules
 npm-debug.log
 yarn-error.log
+
+# React client app
+/client-app/node_modules
+/client-app/dist
+.DS_Store
