@@ -16,34 +16,64 @@ class ItemResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-archive-box';
     protected static ?string $navigationGroup = 'Manajemen Barang';
 
-    public static function form(Form $form): Form
+   public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->maxLength(255),
+
+                // Field Kode dan Barcode sekarang otomatis dan tidak bisa diisi manual
                 Forms\Components\TextInput::make('code')
                     ->label('Kode Unik')
-                    ->required()
+                    ->disabled()
+                    ->dehydrated() // Memastikan field tetap dikirim saat create
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
+
                 Forms\Components\TextInput::make('barcode_path')
                     ->label('Barcode')
+                    ->disabled()
+                    ->dehydrated()
                     ->maxLength(255)
                     ->unique(ignoreRecord: true),
+
                 Forms\Components\Select::make('category_id')
                     ->relationship('category', 'name')
                     ->searchable()
                     ->preload()
                     ->required(),
+
                 Forms\Components\Select::make('location_id')
                     ->relationship('location', 'name')
                     ->searchable()
                     ->preload()
                     ->required(),
+
+                // -- Field Baru untuk Status Awal --
+                Forms\Components\Select::make('status')
+                    ->label('Status Awal')
+                    ->options([
+                        'Baik' => 'Baik',
+                        'Rusak' => 'Rusak',
+                        'Perbaikan' => 'Perbaikan',
+                        'Hilang' => 'Hilang',
+                    ])
+                    ->required()
+                    ->default('Baik')
+                    ->live() // Agar form bereaksi terhadap perubahan
+                    ->visibleOn('create'), // Hanya muncul di halaman create
+
+                Forms\Components\Textarea::make('note')
+                    ->label('Catatan Awal')
+                    ->placeholder('Contoh: Barang baru diterima dari supplier.')
+                    ->visible(fn ($get) => $get('status') !== 'Baik') // Muncul jika status bukan 'Baik'
+                    ->required(fn ($get) => $get('status') !== 'Baik') // Wajib diisi jika status bukan 'Baik'
+                    ->visibleOn('create'),
             ]);
     }
+
 
     public static function table(Table $table): Table
     {

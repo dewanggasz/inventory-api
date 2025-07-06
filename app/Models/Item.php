@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class Item extends Model
 {
@@ -16,6 +17,21 @@ class Item extends Model
         'category_id',
         'location_id'
     ];
+
+    protected static function boot(): void
+    {
+        parent::boot();
+
+        static::creating(function ($item) {
+            if (empty($item->code)) {
+                // Membuat kode unik, contoh: ITM-64A5B6C7D8E9F
+                $uniqueCode = 'ITM-' . strtoupper(uniqid());
+                $item->code = $uniqueCode;
+                // Menggunakan kode unik yang sama untuk barcode
+                $item->barcode_path = $uniqueCode;
+            }
+        });
+    }
 
     /**
      * Get the category that owns the Item
