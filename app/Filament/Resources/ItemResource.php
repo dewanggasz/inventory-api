@@ -104,6 +104,11 @@ class ItemResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('print_barcode')
+                ->label('Cetak PDF') // <-- Ubah label
+                ->icon('heroicon-o-printer')
+                ->url(fn (Item $record): string => route('items.print-barcode', $record))
+                ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
