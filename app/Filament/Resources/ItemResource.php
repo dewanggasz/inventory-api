@@ -104,10 +104,16 @@ class ItemResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('print_barcode')
-                ->label('Cetak PDF') // <-- Ubah label
+                Tables\Actions\Action::make('print_pdf')
+                ->label('Cetak PDF')
                 ->icon('heroicon-o-printer')
-                ->url(fn (Item $record): string => route('items.print-barcode', $record))
+                ->url(fn (Item $record): string => route('items.print-pdf', $record))
+                ->openUrlInNewTab(),
+
+            Tables\Actions\Action::make('download_barcode')
+                ->label('Unduh Barcode')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->url(fn (Item $record): string => route('items.download-barcode', $record))
                 ->openUrlInNewTab(),
             ])
             ->bulkActions([

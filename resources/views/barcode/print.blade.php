@@ -46,7 +46,7 @@
     <div class="label">
         <div class="barcode">
             {{-- Generate Barcode 2D (QR Code) agar lebih mudah di-scan HP --}}
-            {!! DNS2D::getBarcodeHTML($item->barcode_path, 'QRCODE', 5, 5) !!}
+            {!! \Milon\Barcode\Facades\DNS2DFacade::getBarcodeHTML($item->barcode_path, 'QRCODE', 5, 5) !!}
         </div>
         <div class="itemContainer">
             <p class="item-name">{{ $item->name }}</p>

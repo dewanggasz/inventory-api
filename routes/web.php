@@ -7,6 +7,10 @@ Route::get('/', function () {
     return ['Laravel' => app()->version()];
 });
 
-// Rute untuk menampilkan halaman cetak barcode
-Route::get('/items/{item}/print-barcode', [BarcodeController::class, 'print'])
-    ->name('items.print-barcode'); // Beri nama agar mudah dipanggil
+// Rute untuk menampilkan halaman cetak PDF
+Route::get('/items/{item}/print-pdf', [BarcodeController::class, 'printPdf'])
+    ->name('items.print-pdf');
+
+// Rute BARU untuk mengunduh gambar barcode
+Route::get('/items/{item}/download-barcode', [BarcodeController::class, 'downloadImage'])
+    ->name('items.download-barcode');
