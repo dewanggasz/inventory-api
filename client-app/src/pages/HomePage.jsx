@@ -3,42 +3,27 @@ import axiosClient from '../api/axiosClient';
 import ItemCard from '../components/ItemCard';
 import Alert from '../components/Alert';
 import LoadingSpinner from '../components/LoadingSpinner';
-import BarcodeScanner from '../components/BarcodeScanner'; // <-- Impor komponen baru
-
-// Ikon Kamera (SVG)
-const CameraIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197m0 0A5.975 5.975 0 0112 13a5.975 5.975 0 013 1.003m-3-1.003V13m0 0a2 2 0 100 4 2 2 0 000-4zm-6 8a2 2 0 100-4 2 2 0 000 4z" />
-  </svg>
-);
-
+import BarcodeScanner from '../components/BarcodeScanner';
+import { Camera, X } from 'lucide-react'; // <-- Impor ikon
 
 function HomePage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [item, setItem] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [isScannerOpen, setIsScannerOpen] = useState(false); // <-- State untuk scanner
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
 
-  // Menggunakan useCallback agar fungsi tidak dibuat ulang di setiap render
   const performSearch = useCallback(async (code) => {
     if (!code) return;
-
     setLoading(true);
     setItem(null);
     setError('');
-
     try {
-      // Kita akan mencari berdasarkan barcode, bukan kode unik
+      // Endpoint diubah menjadi /scan/ untuk konsistensi dengan scanner
       const response = await axiosClient.get(`/items/scan/${code}`);
       setItem(response.data);
     } catch (err) {
-      if (err.response && err.response.status === 404) {
-        setError('Barang dengan barcode tersebut tidak ditemukan.');
-      } else {
-        setError('Terjadi kesalahan saat mengambil data.');
-      }
-      console.error(err);
+      setError(err.response?.status === 404 ? 'Barang tidak ditemukan.' : 'Terjadi kesalahan.');
     } finally {
       setLoading(false);
     }
@@ -52,19 +37,21 @@ function HomePage() {
   const handleScanSuccess = (decodedText) => {
     setSearchTerm(decodedText);
     setIsScannerOpen(false);
-    // Pencarian akan dipicu oleh useEffect di bawah
   };
 
-  // useEffect akan berjalan ketika searchTerm berubah (termasuk dari hasil scan)
+  const clearInput = () => {
+    setSearchTerm('');
+    setItem(null);
+    setError('');
+  };
+
+  // useEffect ini akan memicu pencarian setiap kali searchTerm berubah
+  // dan scanner tidak sedang terbuka.
   useEffect(() => {
-    if (isScannerOpen === false && searchTerm) {
-        // Cek ini untuk memastikan pencarian otomatis hanya terjadi setelah scan, bukan saat mengetik
-        // Untuk implementasi ini, kita asumsikan setiap perubahan searchTerm akan langsung dicari
-        // Jika ingin hanya setelah scan, perlu state tambahan.
-        performSearch(searchTerm);
+    if (!isScannerOpen && searchTerm) {
+      performSearch(searchTerm);
     }
   }, [searchTerm, isScannerOpen, performSearch]);
-
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center pt-10 px-4">
@@ -83,34 +70,46 @@ function HomePage() {
       </div>
 
       <form onSubmit={handleManualSearch} className="w-full max-w-md mt-8">
-        <div className="flex items-center border-2 border-gray-200 rounded-lg overflow-hidden focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-200 transition-all duration-300">
+        <div className="relative">
           <input
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Kode barang atau hasil scan..."
-            className="w-full px-4 py-3 text-gray-700 focus:outline-none"
+            className="w-full px-4 py-3 pr-24 text-gray-700 border-2 border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all"
           />
-          <button
-            type="button" // <-- Ubah menjadi type="button"
-            onClick={() => setIsScannerOpen(true)}
-            className="p-3 text-gray-500 hover:text-blue-600"
-            title="Pindai Barcode"
-          >
-            <CameraIcon />
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="bg-blue-600 text-white px-6 py-3 font-semibold hover:bg-blue-700 disabled:bg-blue-300 transition-colors"
-          >
-            {loading ? '...' : 'Cari'}
-          </button>
+          <div className="absolute inset-y-0 right-0 flex items-center">
+            {searchTerm && (
+              <button
+                type="button"
+                onClick={clearInput}
+                className="p-2 text-gray-400 hover:text-gray-600"
+                title="Hapus"
+              >
+                <X size={20} />
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => setIsScannerOpen(true)}
+              className="p-2 text-gray-400 hover:text-blue-600"
+              title="Pindai Barcode"
+            >
+              <Camera size={20} />
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              className="h-full bg-blue-600 text-white px-4 font-semibold hover:bg-blue-700 disabled:bg-blue-300 rounded-r-md"
+            >
+              {loading ? '...' : 'Cari'}
+            </button>
+          </div>
         </div>
       </form>
       
-      <div className="mt-6">
-        {loading && <LoadingSpinner />}
+      <div className="w-full max-w-md mt-6">
+        {loading && <div className="flex justify-center"><LoadingSpinner /></div>}
         {error && <Alert message={error} />}
         {item && <ItemCard item={item} />}
       </div>
