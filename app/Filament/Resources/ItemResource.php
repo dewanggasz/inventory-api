@@ -56,9 +56,11 @@ class ItemResource extends Resource
                     ->label('Status Awal')
                     ->options([
                         'Baik' => 'Baik',
-                        'Rusak' => 'Rusak',
                         'Perbaikan' => 'Perbaikan',
                         'Hilang' => 'Hilang',
+                        'Dipinjam' => 'Dipinjam',
+                        'Rusak' => 'Rusak',
+                        'Rusak Total' => 'Rusak Total',
                     ])
                     ->required()
                     ->default('Baik')

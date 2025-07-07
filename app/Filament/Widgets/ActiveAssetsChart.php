@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class ActiveAssetsChart extends ChartWidget
 {
-    protected static ?string $heading = 'Pertumbuhan Aset Aktif (Total Barang - Barang Hilang)';
+    protected static ?string $heading = 'Pertumbuhan Aset Aktif (Total Barang - (Hilang + Rusak Total))';
     protected static ?string $maxHeight = '300px';
     protected static ?int $sort = 3;
     protected int | string | array $columnSpan = 6;
@@ -30,7 +30,7 @@ class ActiveAssetsChart extends ChartWidget
         ->keyBy(fn ($item) => Carbon::create($item->year, $item->month)->format('Y-m'));
 
         // 2. Ambil jumlah item yang BARU ditandai "Hilang" per bulan
-        $lostItemsPerMonth = Status::where('status', 'Hilang')
+        $lostItemsPerMonth = Status::whereIn('status', ['Hilang', 'Rusak Total'])
             ->select(
                 DB::raw('YEAR(created_at) as year'),
                 DB::raw('MONTH(created_at) as month'),
@@ -43,7 +43,7 @@ class ActiveAssetsChart extends ChartWidget
 
         // 3. Hitung kondisi awal sebelum periode 12 bulan ini
         $initialTotalItems = Item::where('created_at', '<', now()->subMonths(11)->startOfMonth())->count();
-        $initialLostItems = Status::where('status', 'Hilang')
+        $initialLostItems = Status::whereIn('status', ['Hilang', 'Rusak Total'])
                                 ->where('created_at', '<', now()->subMonths(11)->startOfMonth())
                                 ->distinct('item_id')
                                 ->count();

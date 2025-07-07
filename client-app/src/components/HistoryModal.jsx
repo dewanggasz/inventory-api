@@ -11,6 +11,10 @@ const getStatusStyle = (status) => {
       return { icon: '❌', color: 'text-red-600' };
     case 'Perbaikan':
       return { icon: '🔧', color: 'text-blue-600' };
+    case 'Dipinjam':
+      return { icon: '🤝', color: 'text-purple-600' };
+    case 'Rusak Total':
+      return { icon: '💀', color: 'text-gray-800' };
     default:
       return { icon: '➡️', color: 'text-gray-600' };
   }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
 
-const statusOptions = ['Baik', 'Rusak', 'Hilang', 'Perbaikan'];
+const statusOptions = ['Baik', 'Hilang', 'Perbaikan', 'Dipinjam', 'Rusak', 'Rusak Total'];
 
 function UpdateStatusModal({ item, onClose, onUpdate, loading }) {
   const [newStatus, setNewStatus] = useState(item.latestStatus?.status || 'Baik');

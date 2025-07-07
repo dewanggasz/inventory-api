@@ -63,7 +63,7 @@ class ItemController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'status' => 'required|string|in:Baik,Rusak,Hilang,Perbaikan',
+            'status' => 'required|string|in:Baik,Rusak,Hilang,Perbaikan,Dipinjam,Rusak Total',
             'note' => 'nullable|string|max:255',
         ]);
 
