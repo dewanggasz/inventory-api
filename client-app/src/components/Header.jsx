@@ -2,7 +2,9 @@
 
 import { useState } from "react"
 import { useAuth } from "../context/AuthContext"
-import { LogOut, User, LayoutDashboard, Menu, X } from "lucide-react"
+import { Link } from 'react-router-dom';
+// --- TAMBAHKAN 'Archive' DARI LUCIDE ---
+import { LogOut, User, LayoutDashboard, Menu, X, Archive } from "lucide-react"
 
 function Header() {
   const { user, logout } = useAuth()
@@ -17,27 +19,23 @@ function Header() {
   }
 
   return (
-    <header className="w-full top-0 left-0 ">
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 lg:mt-4">
+    <header className="w-full top-0 left-0 bg-white shadow-sm">
+      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand Section */}
           <div className="flex items-center">
-            <div className="flex items-center text-gray-700">
-              <div className="bg-blue-600 p-2 rounded-lg mr-3">
-                <User size={20} className="text-white" />
-              </div>
-              <div className="hidden sm:block">
-                <span className="text-sm text-gray-500">Selamat datang,</span>
-                <div className="font-semibold text-gray-800">{user ? user.name : "Pengguna"}</div>
-              </div>
-              <div className="sm:hidden">
-                <span className="font-semibold text-gray-800">{user ? user.name : "Pengguna"}</span>
-              </div>
-            </div>
+            {/* --- TAMBAHKAN LINK INI --- */}
+            <Link to="/" className="text-xl font-bold text-gray-800 mr-6">InventoryApp</Link>
           </div>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
+            {/* --- TAMBAHKAN LINK INI --- */}
+            <Link to="/items" className="flex items-center text-gray-600 hover:text-blue-600 font-medium py-2 px-4 rounded-lg transition-colors">
+              <Archive size={16} className="mr-2" />
+              Daftar Barang
+            </Link>
+
             {isAdmin && (
               <a
                 href={adminDashboardUrl}
@@ -88,6 +86,16 @@ function Header() {
                 <div className="font-semibold text-gray-800">{user ? user.name : "Pengguna"}</div>
               </div>
             </div>
+
+            {/* --- TAMBAHKAN LINK INI UNTUK MOBILE --- */}
+            <Link
+              to="/items"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center w-full bg-white hover:bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors border border-gray-200"
+            >
+              <Archive size={18} className="mr-3" />
+              Daftar Barang
+            </Link>
 
             {/* Admin Dashboard Link - Mobile */}
             {isAdmin && (

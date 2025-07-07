@@ -14,6 +14,31 @@ class ItemController extends Controller
      * Display the specified item by its unique code.
      * GET /api/items/{kode}
      */
+
+     public function index(Request $request)
+    {
+        $query = Item::with(['category', 'location', 'latestStatus']);
+
+        // Fitur Pencarian
+        if ($request->has('search')) {
+            $searchTerm = $request->search;
+            $query->where(function ($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                  ->orWhere('code', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        // Fitur Pengurutan
+        $sortBy = $request->get('sort_by', 'created_at');
+        $sortDir = $request->get('sort_dir', 'desc');
+        $query->orderBy($sortBy, $sortDir);
+
+        // Paginasi
+        $items = $query->paginate(15); // Tampilkan 15 item per halaman
+
+        return response()->json($items);
+    }
+    
     public function show($code)
     {
         $item = Item::with(['category', 'location', 'latestStatus.user'])

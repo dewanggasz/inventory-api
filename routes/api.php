@@ -14,6 +14,8 @@ Route::middleware('auth:sanctum')->group(function () {
         return $request->user();
     });
 
+    Route::get('/items', [ItemController::class, 'index']);
+
     // Endpoint untuk Barang
     Route::get('/items/scan/{barcode}', [ItemController::class, 'scan']);
     Route::get('/items/{kode}', [ItemController::class, 'show']);
