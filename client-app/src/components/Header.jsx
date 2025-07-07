@@ -2,9 +2,73 @@
 
 import { useState } from "react"
 import { useAuth } from "../context/AuthContext"
-import { Link } from 'react-router-dom';
-// --- TAMBAHKAN 'Archive' DARI LUCIDE ---
+import { Link } from "react-router-dom"
 import { LogOut, User, LayoutDashboard, Menu, X, Archive } from "lucide-react"
+
+// Utility function for class names
+const cn = (...classes) => {
+  return classes.filter(Boolean).join(" ")
+}
+
+// Button Component
+const Button = ({
+  children,
+  variant = "default",
+  size = "default",
+  disabled = false,
+  onClick,
+  href,
+  target,
+  rel,
+  className = "",
+  ...props
+}) => {
+  const baseStyles =
+    "inline-flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 disabled:pointer-events-none disabled:opacity-50"
+
+  const variants = {
+    default: "bg-black text-white hover:bg-black/90",
+    outline: "border border-neutral-200 bg-white hover:bg-neutral-50",
+    ghost: "hover:bg-neutral-100 text-neutral-600 hover:text-neutral-900",
+    destructive: "bg-red-600 text-white hover:bg-red-700",
+  }
+
+  const sizes = {
+    default: "h-10 px-4 py-2",
+    sm: "h-9 px-3 text-sm",
+    icon: "h-10 w-10",
+  }
+
+  const Component = href ? "a" : "button"
+
+  return (
+    <Component
+      className={cn(baseStyles, variants[variant], sizes[size], className)}
+      disabled={disabled}
+      onClick={onClick}
+      href={href}
+      target={target}
+      rel={rel}
+      {...props}
+    >
+      {children}
+    </Component>
+  )
+}
+
+// Navigation Link Component
+const NavLink = ({ to, children, onClick, className = "" }) => (
+  <Link
+    to={to}
+    onClick={onClick}
+    className={cn(
+      "flex items-center gap-2 text-neutral-600 hover:text-neutral-900 font-medium py-2 px-4 transition-colors",
+      className,
+    )}
+  >
+    {children}
+  </Link>
+)
 
 function Header() {
   const { user, logout } = useAuth()
@@ -19,82 +83,85 @@ function Header() {
   }
 
   return (
-    <header className="w-full top-0 left-0 bg-white shadow-sm">
-      <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
+    <header className="w-full bg-white border-b border-neutral-200">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand Section */}
           <div className="flex items-center">
-            {/* --- TAMBAHKAN LINK INI --- */}
-            <Link to="/" className="text-xl font-bold text-gray-800 mr-6">InventoryApp</Link>
+            <Link to="/" className="text-xl font-light tracking-tight text-neutral-900">
+              <span className="font-mono tracking-wider">INVENTORY</span>
+              <span className="text-neutral-500">APP</span>
+            </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-4">
-            {/* --- TAMBAHKAN LINK INI --- */}
-            <Link to="/items" className="flex items-center text-gray-600 hover:text-blue-600 font-medium py-2 px-4 rounded-lg transition-colors">
-              <Archive size={16} className="mr-2" />
-              Daftar Barang
-            </Link>
+          <div className="hidden md:flex items-center space-x-1">
+            <NavLink to="/items">
+              <Archive className="h-4 w-4" />
+              <span className="font-mono text-xs tracking-wider uppercase">Items</span>
+            </NavLink>
 
             {isAdmin && (
-              <a
+              <Button
+                variant="outline"
                 href={adminDashboardUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                className="gap-2 bg-transparent"
               >
-                <LayoutDashboard size={16} className="mr-2" />
-                Dashboard
-              </a>
+                <LayoutDashboard className="h-4 w-4" />
+                <span className="font-mono text-xs tracking-wider uppercase">Dashboard</span>
+              </Button>
             )}
-            <button
-              onClick={logout}
-              className="flex items-center bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
-            >
-              <LogOut size={16} className="mr-2" />
-              Logout
-            </button>
+
+            <Button variant="destructive" onClick={logout} className="gap-2 ml-2">
+              <LogOut className="h-4 w-4" />
+              <span className="font-mono text-xs tracking-wider uppercase">Logout</span>
+            </Button>
           </div>
 
           {/* Mobile Hamburger Button */}
           <div className="md:hidden">
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={toggleMobileMenu}
-              className="inline-flex items-center justify-center p-2 rounded-lg text-gray-600 hover:text-gray-800 hover:bg-gray-100 transition-colors"
+              className="text-neutral-600 hover:text-neutral-900"
               aria-expanded="false"
             >
               <span className="sr-only">Open main menu</span>
-              {isMobileMenuOpen ? <X size={24} className="block" /> : <Menu size={24} className="block" />}
-            </button>
+              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
           </div>
         </div>
 
         {/* Mobile Navigation Menu */}
         <div
-          className={`md:hidden transition-all duration-300 ease-in-out ${
-            isMobileMenuOpen ? "max-h-96 opacity-100 pb-4" : "max-h-0 opacity-0 overflow-hidden"
-          }`}
+          className={cn(
+            "md:hidden transition-all duration-300 ease-in-out",
+            isMobileMenuOpen ? "max-h-96 opacity-100 pb-4" : "max-h-0 opacity-0 overflow-hidden",
+          )}
         >
-          <div className="px-2 pt-2 pb-3 space-y-3 bg-gray-50 rounded-lg mt-2 border border-gray-200">
+          <div className="px-2 pt-4 pb-3 space-y-3 bg-neutral-50 border border-neutral-200 mt-2">
             {/* User Info in Mobile */}
-            <div className="flex items-center px-3 py-2 text-gray-700 bg-white rounded-lg border border-gray-200">
-              <div className="bg-blue-600 p-2 rounded-lg mr-3">
-                <User size={16} className="text-white" />
+            <div className="flex items-center px-4 py-3 text-neutral-700 bg-white border border-neutral-200">
+              <div className="bg-neutral-900 p-2 mr-3 flex items-center justify-center w-10 h-10">
+                <User className="h-4 w-4 text-white" />
               </div>
               <div>
-                <div className="text-sm text-gray-500">Selamat datang,</div>
-                <div className="font-semibold text-gray-800">{user ? user.name : "Pengguna"}</div>
+                <div className="text-xs text-neutral-400 font-mono tracking-wider uppercase">Welcome</div>
+                <div className="font-medium text-neutral-900">{user ? user.name : "User"}</div>
               </div>
             </div>
 
-            {/* --- TAMBAHKAN LINK INI UNTUK MOBILE --- */}
+            {/* Mobile Navigation Links */}
             <Link
               to="/items"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center w-full bg-white hover:bg-gray-100 text-gray-700 font-medium py-3 px-4 rounded-lg transition-colors border border-gray-200"
+              className="flex items-center w-full bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 font-medium py-3 px-4 transition-colors border border-neutral-200 gap-3"
             >
-              <Archive size={18} className="mr-3" />
-              Daftar Barang
+              <Archive className="h-4 w-4" />
+              <span className="font-mono text-xs tracking-wider uppercase">Items List</span>
             </Link>
 
             {/* Admin Dashboard Link - Mobile */}
@@ -104,10 +171,10 @@ function Header() {
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center w-full bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                className="flex items-center w-full bg-neutral-900 hover:bg-black text-white font-medium py-3 px-4 transition-colors gap-3"
               >
-                <LayoutDashboard size={18} className="mr-3" />
-                Dashboard Admin
+                <LayoutDashboard className="h-4 w-4" />
+                <span className="font-mono text-xs tracking-wider uppercase">Admin Dashboard</span>
               </a>
             )}
 
@@ -117,10 +184,10 @@ function Header() {
                 logout()
                 setIsMobileMenuOpen(false)
               }}
-              className="flex items-center w-full bg-red-500 hover:bg-red-600 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              className="flex items-center w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 transition-colors gap-3"
             >
-              <LogOut size={18} className="mr-3" />
-              Logout
+              <LogOut className="h-4 w-4" />
+              <span className="font-mono text-xs tracking-wider uppercase">Logout</span>
             </button>
           </div>
         </div>

@@ -28,6 +28,19 @@ class ItemController extends Controller
             });
         }
 
+        // -- LOGIKA FILTER BARU --
+        if ($request->has('category_id') && !empty($request->category_id)) {
+            $query->where('category_id', $request->category_id);
+        }
+        if ($request->has('location_id') && !empty($request->location_id)) {
+            $query->where('location_id', $request->location_id);
+        }
+        if ($request->has('status') && !empty($request->status)) {
+            $query->whereHas('latestStatus', function ($q) use ($request) {
+                $q->where('status', $request->status);
+            });
+        }
+
         // Fitur Pengurutan
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDir = $request->get('sort_dir', 'desc');
@@ -38,7 +51,7 @@ class ItemController extends Controller
 
         return response()->json($items);
     }
-    
+
     public function show($code)
     {
         $item = Item::with(['category', 'location', 'latestStatus.user'])

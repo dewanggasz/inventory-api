@@ -5,32 +5,47 @@ import { useSearchParams } from "react-router-dom"
 import axiosClient from "../api/axiosClient"
 import Header from "../components/Header"
 import LoadingSpinner from "../components/LoadingSpinner"
-import { ChevronUp, ChevronDown, Search } from "lucide-react"
+import { ChevronUp, ChevronDown, Search, FilterX, Filter } from "lucide-react"
 
 // Utility function for class names
 const cn = (...classes) => {
   return classes.filter(Boolean).join(" ")
 }
 
-// Badge Component
+// Status options with colors
+const statusOptions = ["Baik", "Rusak", "Hilang", "Perbaikan", "Dipinjam", "Rusak Total"]
+
+// Enhanced Badge Component with status-specific colors
 const badgeVariants = {
+  // Indonesian status colors
+  baik: "border-transparent bg-green-100 text-green-800 hover:bg-green-200",
+  rusak: "border-transparent bg-red-100 text-red-800 hover:bg-red-200",
+  hilang: "border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200",
+  perbaikan: "border-transparent bg-yellow-100 text-yellow-800 hover:bg-yellow-200",
+  dipinjam: "border-transparent bg-blue-100 text-blue-800 hover:bg-blue-200",
+  "rusak total": "border-transparent bg-red-200 text-red-900 hover:bg-red-300",
+  // Default variants
   default: "border-transparent bg-black text-white hover:bg-black/80",
   secondary: "border-transparent bg-neutral-100 text-neutral-900 hover:bg-neutral-200",
-  destructive: "border-transparent bg-red-100 text-red-800 hover:bg-red-200",
   outline: "text-neutral-700 border-neutral-200",
 }
 
-const Badge = ({ children, variant = "default", className = "" }) => (
-  <span
-    className={cn(
-      "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
-      badgeVariants[variant],
-      className,
-    )}
-  >
-    {children}
-  </span>
-)
+const Badge = ({ children, variant = "default", className = "" }) => {
+  const statusKey = children?.toString().toLowerCase()
+  const variantClass = badgeVariants[statusKey] || badgeVariants[variant] || badgeVariants.default
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium transition-colors",
+        variantClass,
+        className,
+      )}
+    >
+      {children}
+    </span>
+  )
+}
 
 // Button Component
 const Button = ({
@@ -68,11 +83,36 @@ const Button = ({
   )
 }
 
+// Select Component
+const Select = ({ children, value, onChange, className = "", ...props }) => (
+  <select
+    value={value}
+    onChange={onChange}
+    className={cn(
+      "h-10 px-3 py-2 border border-neutral-200 bg-white text-sm focus:ring-1 focus:ring-neutral-900 focus:outline-none transition-all",
+      className,
+    )}
+    {...props}
+  >
+    {children}
+  </select>
+)
+
 function ItemsListPage() {
   const [items, setItems] = useState([])
   const [pagination, setPagination] = useState({})
   const [loading, setLoading] = useState(true)
   const [searchParams, setSearchParams] = useSearchParams()
+
+  // State untuk menampung data filter
+  const [categories, setCategories] = useState([])
+  const [locations, setLocations] = useState([])
+
+  // Fetch data untuk dropdown filter
+  useEffect(() => {
+    axiosClient.get("/categories").then(({ data }) => setCategories(data))
+    axiosClient.get("/locations").then(({ data }) => setLocations(data))
+  }, [])
 
   const fetchItems = useCallback(() => {
     setLoading(true)
@@ -96,6 +136,23 @@ function ItemsListPage() {
     fetchItems()
   }, [fetchItems])
 
+  // Fungsi generik untuk menangani perubahan filter
+  const handleFilterChange = (key, value) => {
+    setSearchParams((prev) => {
+      if (value) {
+        prev.set(key, value)
+      } else {
+        prev.delete(key)
+      }
+      prev.set("page", "1")
+      return prev
+    })
+  }
+
+  const clearFilters = () => {
+    setSearchParams(new URLSearchParams())
+  }
+
   const handleSort = (column) => {
     const currentSortBy = searchParams.get("sort_by")
     const currentSortDir = searchParams.get("sort_dir")
@@ -110,41 +167,19 @@ function ItemsListPage() {
     })
   }
 
-  const handleSearch = (e) => {
-    const value = e.target.value
-    setSearchParams((prev) => {
-      if (value) {
-        prev.set("search", value)
-      } else {
-        prev.delete("search")
-      }
-      prev.set("page", "1") // Reset ke halaman 1 saat mencari
-      return prev
-    })
-  }
-
   const handlePageChange = (page) => {
+    if (page < 1 || page > pagination.lastPage) return
     setSearchParams((prev) => {
       prev.set("page", page)
       return prev
     })
   }
 
-  const getStatusVariant = (status) => {
-    switch (status?.toLowerCase()) {
-      case "available":
-      case "baik", "rusak", "perbaikan":
-        return "default"
-      case "in use":
-      case "baik":
-        return "secondary"
-      case "loan":
-      case "dipinjam":
-        return "loan"
-      default:
-        return "outline"
-    }
-  }
+  const hasActiveFilters =
+    searchParams.get("search") ||
+    searchParams.get("category_id") ||
+    searchParams.get("location_id") ||
+    searchParams.get("status")
 
   const SortableHeader = ({ column, label }) => (
     <th
@@ -185,93 +220,205 @@ function ItemsListPage() {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Search Section */}
-        <div className="mb-12">
-          <div className="relative max-w-md">
-            <input
-              type="text"
-              placeholder="Search items..."
-              onChange={handleSearch}
-              defaultValue={searchParams.get("search")}
-              className="w-full pl-12 pr-4 py-3 border-0 bg-neutral-50 focus:ring-1 focus:ring-neutral-900 focus:outline-none transition-all h-12 text-sm"
-            />
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+        {/* Filter Section */}
+        <div className="bg-neutral-50 border border-neutral-200 p-6 mb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="h-4 w-4 text-neutral-500" />
+            <span className="text-sm text-neutral-500 font-mono tracking-wider uppercase">Filters</span>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+            {/* Search Input */}
+            <div className="md:col-span-5">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search items..."
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                  value={searchParams.get("search") || ""}
+                  className="w-full pl-12 pr-4 py-3 border-0 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none transition-all h-12 text-sm"
+                />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+              </div>
+            </div>
+
+            {/* Filter Dropdowns */}
+            <Select
+              onChange={(e) => handleFilterChange("category_id", e.target.value)}
+              value={searchParams.get("category_id") || ""}
+            >
+              <option value="">All Categories</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </Select>
+
+            <Select
+              onChange={(e) => handleFilterChange("location_id", e.target.value)}
+              value={searchParams.get("location_id") || ""}
+            >
+              <option value="">All Locations</option>
+              {locations.map((loc) => (
+                <option key={loc.id} value={loc.id}>
+                  {loc.name}
+                </option>
+              ))}
+            </Select>
+
+            <Select
+              onChange={(e) => handleFilterChange("status", e.target.value)}
+              value={searchParams.get("status") || ""}
+            >
+              <option value="">All Status</option>
+              {statusOptions.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
+              ))}
+            </Select>
+
+            <Button variant="outline" onClick={clearFilters} className="justify-center bg-transparent">
+              <FilterX className="h-4 w-4 mr-2" />
+              Clear Filters
+            </Button>
+          </div>
+
+          {/* Active Filters Display */}
+          {hasActiveFilters && (
+            <div className="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t border-neutral-200">
+              <span className="text-xs text-neutral-400 font-mono tracking-wider">ACTIVE FILTERS:</span>
+              {searchParams.get("search") && (
+                <Badge variant="outline" className="text-xs">
+                  Search: {searchParams.get("search")}
+                </Badge>
+              )}
+              {searchParams.get("category_id") && (
+                <Badge variant="outline" className="text-xs">
+                  Category: {categories.find((c) => c.id == searchParams.get("category_id"))?.name}
+                </Badge>
+              )}
+              {searchParams.get("location_id") && (
+                <Badge variant="outline" className="text-xs">
+                  Location: {locations.find((l) => l.id == searchParams.get("location_id"))?.name}
+                </Badge>
+              )}
+              {searchParams.get("status") && (
+                <Badge variant="outline" className="text-xs">
+                  Status: {searchParams.get("status")}
+                </Badge>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Stats Cards */}
-        
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex justify-center py-16">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <>
+            {/* Desktop Table View */}
+            <div className="hidden md:block bg-white border border-neutral-200">
+              <table className="min-w-full divide-y divide-neutral-200">
+                <thead className="bg-neutral-50">
+                  <tr>
+                    <SortableHeader column="name" label="Name" />
+                    <SortableHeader column="code" label="Code" />
+                    <th
+                      scope="col"
+                      className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider"
+                    >
+                      Category
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider"
+                    >
+                      Location
+                    </th>
+                    <th
+                      scope="col"
+                      className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider"
+                    >
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-neutral-200">
+                  {items.length === 0 ? (
+                    <tr>
+                      <td colSpan="5" className="px-6 py-16 text-center text-neutral-500">
+                        <div className="flex flex-col items-center gap-2">
+                          <Search className="h-8 w-8 text-neutral-300" />
+                          <div>No items found</div>
+                          <div className="text-xs text-neutral-400">Try adjusting your search terms or filters</div>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    items.map((item) => (
+                      <tr key={item.id} className="hover:bg-neutral-50 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-neutral-900">{item.name}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-mono text-neutral-500">{item.code}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-neutral-500">{item.category?.name}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm text-neutral-500">{item.location?.name}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <Badge>{item.latest_status?.status}</Badge>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
 
-        {/* Table Section */}
-        <div className="bg-white border border-neutral-200">
-          <table className="min-w-full divide-y divide-neutral-200">
-            <thead className="bg-neutral-50">
-              <tr>
-                <SortableHeader column="name" label="Name" />
-                <SortableHeader column="code" label="Code" />
-                <th
-                  scope="col"
-                  className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider"
-                >
-                  Category
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider"
-                >
-                  Location
-                </th>
-                <th
-                  scope="col"
-                  className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider"
-                >
-                  Status
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-neutral-200">
-              {loading ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-16">
-                    <div className="flex items-center justify-center">
-                      <LoadingSpinner />
-                    </div>
-                  </td>
-                </tr>
-              ) : items.length === 0 ? (
-                <tr>
-                  <td colSpan="5" className="px-6 py-16 text-center text-neutral-500">
-                    <div className="flex flex-col items-center gap-2">
-                      <Search className="h-8 w-8 text-neutral-300" />
-                      <div>No items found</div>
-                      <div className="text-xs text-neutral-400">Try adjusting your search terms</div>
-                    </div>
-                  </td>
-                </tr>
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-4">
+              {items.length === 0 ? (
+                <div className="text-center py-16 text-neutral-500">
+                  <div className="flex flex-col items-center gap-2">
+                    <Search className="h-8 w-8 text-neutral-300" />
+                    <div>No items found</div>
+                    <div className="text-xs text-neutral-400">Try adjusting your search terms or filters</div>
+                  </div>
+                </div>
               ) : (
                 items.map((item) => (
-                  <tr key={item.id} className="hover:bg-neutral-50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-neutral-900">{item.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-mono text-neutral-500">{item.code}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-neutral-500">{item.category?.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-neutral-500">{item.location?.name}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <Badge variant={getStatusVariant(item.latest_status?.status)}>{item.latest_status?.status}</Badge>
-                    </td>
-                  </tr>
+                  <div key={item.id} className="bg-white border border-neutral-200 p-6">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-neutral-900 text-sm">{item.name}</h3>
+                        <p className="text-xs font-mono text-neutral-500 mt-1">{item.code}</p>
+                      </div>
+                      <Badge className="ml-3">{item.latest_status?.status || "N/A"}</Badge>
+                    </div>
+                    <div className="pt-3 border-t border-neutral-100 space-y-2">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-neutral-400 font-mono tracking-wider uppercase">Category</span>
+                        <span className="text-neutral-600">{item.category?.name}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-neutral-400 font-mono tracking-wider uppercase">Location</span>
+                        <span className="text-neutral-600">{item.location?.name}</span>
+                      </div>
+                    </div>
+                  </div>
                 ))
               )}
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </>
+        )}
 
         {/* Pagination Controls */}
         <div className="flex flex-col sm:flex-row items-center justify-between pt-8 border-t border-neutral-200 mt-8 gap-4">
