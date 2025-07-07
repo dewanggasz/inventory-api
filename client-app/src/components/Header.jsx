@@ -17,7 +17,7 @@ function Header() {
   }
 
   return (
-    <header className="w-full fixed top-0 left-0 ">
+    <header className="w-full top-0 left-0 ">
       <div className="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8 lg:mt-4">
         <div className="flex justify-between items-center h-16">
           {/* Logo/Brand Section */}

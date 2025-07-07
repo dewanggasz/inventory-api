@@ -90,7 +90,7 @@ function HomePage() {
     <div className="min-h-screen bg-gradient-to-br from-white to-gray-50">
       <Header />
 
-      <main className="pt-42 max-w-4xl mx-auto px-4 py-8">
+      <main className="pt-30 max-w-4xl mx-auto px-4 py-8">
         {/* Modals */}
         {isScannerOpen && <BarcodeScanner onScanSuccess={handleScanSuccess} onClose={() => setIsScannerOpen(false)} />}
         {isHistoryOpen && (

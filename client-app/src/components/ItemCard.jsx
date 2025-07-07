@@ -24,7 +24,9 @@ const getStatusColor = (status) => {
 function ItemCard({ item, onViewHistory, onUpdateStatus }) {
   if (!item) return null
 
-  const { name, code, category, location, latestStatus } = item
+  const { name, code, category, location } = item;
+  const latestStatus = item.latest_status;
+
 
   return (
     <div className="w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
