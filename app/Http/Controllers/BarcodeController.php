@@ -5,11 +5,11 @@ namespace App\Http\Controllers;
 use App\Models\Item;
 use Spatie\LaravelPdf\Facades\Pdf;
 use Illuminate\Support\Facades\Response;
-// Kita tidak lagi memerlukan "use Milon\Barcode\Facades\DNS2D;"
+use Milon\Barcode\Facades\DNS2DFacade;
 
 class BarcodeController extends Controller
 {
-    // Method untuk membuat file PDF
+    // Method untuk membuat file PDF satu per satu
     public function printPdf(Item $item)
     {
         return Pdf::view('barcode.print', compact('item'))
@@ -17,19 +17,24 @@ class BarcodeController extends Controller
             ->inline();
     }
 
-    // Method untuk mengunduh gambar barcode
+    // Method untuk mengunduh gambar barcode satu per satu
     public function downloadImage(Item $item)
     {
-        // PERBAIKAN: Panggil kelas fasad secara lengkap untuk menghindari masalah alias
-        $barcodeImage = base64_decode(\Milon\Barcode\Facades\DNS2DFacade::getBarcodePNG($item->barcode_path, 'QRCODE'));
-
-        // Buat nama file
+        $barcodeImage = base64_decode(DNS2DFacade::getBarcodePNG($item->barcode_path, 'QRCODE'));
         $filename = "barcode-image-{$item->code}.png";
-
-        // Kembalikan sebagai respons gambar untuk diunduh
         return Response::make($barcodeImage, 200, [
             'Content-Type' => 'image/png',
             'Content-Disposition' => 'attachment; filename="'.$filename.'"'
         ]);
+    }
+
+    // -- METHOD BARU UNTUK CETAK SEMUA --
+    public function printAll()
+    {
+        $items = Item::all();
+        return Pdf::view('barcode.print-all', compact('items'))
+            ->format('A4') // Gunakan kertas ukuran A4
+            ->name('semua-barcode-barang.pdf')
+            ->inline();
     }
 }
