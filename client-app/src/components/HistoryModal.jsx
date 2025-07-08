@@ -14,6 +14,7 @@ import {
   Skull,
   ArrowRight,
   Loader2,
+  MapPin // <-- Impor ikon MapPin
 } from "lucide-react"
 
 // Utility function for class names
@@ -151,7 +152,7 @@ function HistoryModal({ history, onClose, loading }) {
                     <div key={record.id} className="relative">
                       {/* Timeline Line */}
                       {index < history.length - 1 && (
-                        <div className="absolute left-6 top-12 w-px h-6 bg-neutral-200"></div>
+                        <div className="absolute left-6 top-12 w-px h-full bg-neutral-200"></div>
                       )}
 
                       <div
@@ -207,6 +208,18 @@ function HistoryModal({ history, onClose, loading }) {
                                 })}
                               </span>
                             </div>
+
+                            {/* --- BLOK BARU UNTUK LOKASI --- */}
+                            {record.location && (
+                                <div className="flex items-center gap-2 text-neutral-600">
+                                    <MapPin className="h-3 w-3" />
+                                    <span className="text-xs font-mono text-neutral-400 tracking-wider uppercase">
+                                        Lokasi
+                                    </span>
+                                    <span className="font-medium text-neutral-900">{record.location.name}</span>
+                                </div>
+                            )}
+                            {/* ----------------------------- */}
 
                             {/* Notes */}
                             {record.note && (

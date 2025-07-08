@@ -13,23 +13,24 @@ class Status extends Model
         'item_id',
         'status',
         'user_id',
+        'note',
         'photo_path',
-        'note'
+        'location_id' // <-- Tambahkan ini
     ];
 
-    /**
-     * Get the item that owns the Status
-     */
     public function item()
     {
         return $this->belongsTo(Item::class);
     }
 
-    /**
-     * Get the user that owns the Status
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // --- TAMBAHKAN RELASI BARU INI ---
+    public function location()
+    {
+        return $this->belongsTo(Location::class);
     }
 }

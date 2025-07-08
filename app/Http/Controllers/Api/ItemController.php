@@ -60,8 +60,8 @@ class ItemController extends Controller
 
     public function history($code)
     {
-        $item = Item::where('code', $code)->firstOrFail();
-        $history = $item->statuses()->with('user')->get();
+        $item = Item::where('code', 'like', $code)->firstOrFail();
+        $history = $item->statuses()->with(['user', 'location'])->orderBy('created_at', 'desc')->get();
         return response()->json($history);
     }
 
@@ -72,7 +72,7 @@ class ItemController extends Controller
                 'status' => 'required|string|in:Baik,Rusak,Hilang,Perbaikan,Dipinjam,Rusak Total',
                 'note' => 'nullable|string|max:255',
                 'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-                'location_id' => 'nullable|exists:locations,id', // <-- Validasi baru
+                'location_id' => 'required|exists:locations,id',
             ]);
 
             $item = Item::findOrFail($id);
@@ -83,19 +83,21 @@ class ItemController extends Controller
             }
 
             DB::transaction(function () use ($item, $validated, $photoPath, $request) {
-                // Buat record status baru
+                // PERBAIKAN: Update lokasi utama barang TERLEBIH DAHULU
+                if ($request->filled('location_id') && $item->location_id != $validated['location_id']) {
+                    $item->location_id = $validated['location_id'];
+                    $item->save();
+                }
+
+                // Setelah lokasi diupdate, baru buat record status baru
+                // Ini akan mencatat lokasi yang sudah diperbarui
                 $item->statuses()->create([
                     'status' => $validated['status'],
                     'note' => $validated['note'] ?? null,
                     'user_id' => Auth::id(),
                     'photo_path' => $photoPath,
+                    'location_id' => $item->location_id, 
                 ]);
-
-                // -- LOGIKA BARU: Update lokasi jika ada --
-                if ($request->filled('location_id')) {
-                    $item->location_id = $validated['location_id'];
-                    $item->save();
-                }
             });
 
             $item->load(['category', 'location', 'latestStatus.user']);
