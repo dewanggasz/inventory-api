@@ -4,7 +4,7 @@ Aplikasi web modern untuk melacak dan mengelola aset atau barang dalam sebuah or
 ## ✨ Fitur Utama
 Aplikasi ini terdiri dari dua bagian utama dengan fungsionalitas yang berbeda:
 
-## 📱 Aplikasi Pengguna (Frontend - React)
+# 📱 Aplikasi Pengguna (Frontend - React)
 Diakses oleh staf operasional di lapangan.
 
     - Otentikasi Aman: Login menggunakan token Laravel Sanctum.
@@ -39,29 +39,29 @@ Diakses oleh administrator untuk manajemen data menyeluruh.
 ## 💻 Teknologi yang Digunakan
 Arsitektur aplikasi memisahkan frontend dan backend yang berkomunikasi melalui API.
 
-# Frontend (Aplikasi Pengguna)
+### Frontend (Aplikasi Pengguna)
 
-    - Framework: ```React.js```
+- Framework: ```React.js```
 
-    - Build Tool: ```Vite```
+- Build Tool: ```Vite```
 
-    - Styling: ```Tailwind CSS``` & ```CSS Native```
+- Styling: ```Tailwind CSS``` & ```CSS Native```
 
-    - HTTP Client: ```Axios```
+- HTTP Client: ```Axios```
 
-    - Routing: ```React Router DOM```
+- Routing: ```React Router DOM```
 
-    - State Management: ```React Context``` & ```Hooks```
+- State Management: ```React Context``` & ```Hooks```
 
-# Backend (API & Panel Admin)
+### Backend (API & Panel Admin)
 
-    - Framework: ```Laravel 12```
+- Framework: ```Laravel 12```
 
-    - Panel Admin: ```Filament 3.x```
+- Panel Admin: ```Filament 3.x```
 
-    - Otentikasi API: ```Laravel Sanctum```
+- Otentikasi API: ```Laravel Sanctum```
 
-    - Database: ```MySQL```
+- Database: ```MySQL```
 
 ## ⚙️ Instalasi & Menjalankan Lokal
 Berikut adalah panduan untuk menjalankan aplikasi ini di lingkungan lokal.
