@@ -1,5 +1,3 @@
-"use client"
-
 import { useState, useCallback } from "react"
 import axiosClient from "../api/axiosClient"
 import ItemCard from "../components/ItemCard"
@@ -7,6 +5,7 @@ import BarcodeScanner from "../components/BarcodeScanner"
 import HistoryModal from "../components/HistoryModal"
 import UpdateStatusModal from "../components/UpdateStatusModal"
 import Header from "../components/Header"
+import Alert from "../components/Alert"
 import { X, Search, QrCode, Loader2 } from "lucide-react"
 
 // Utility function for class names
@@ -66,6 +65,7 @@ function HomePage() {
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false)
   const [itemToUpdate, setItemToUpdate] = useState(null)
   const [updateLoading, setUpdateLoading] = useState(false)
+  const [updateError, setUpdateError] = useState('');
 
   const performSearch = useCallback(async (endpoint) => {
     setLoading(true)
@@ -75,7 +75,7 @@ function HomePage() {
       const response = await axiosClient.get(endpoint)
       setItem(response.data)
     } catch (err) {
-      setError(err.response?.status === 404 ? "Item not found." : "An error occurred.")
+      setError(err.response?.status === 404 ? "Barang tidak ditemukan." : "Terjadi kesalahan.")
     } finally {
       setLoading(false)
     }
@@ -107,25 +107,31 @@ function HomePage() {
       const response = await axiosClient.get(`/items/${itemCode}/history`)
       setHistoryData(response.data)
     } catch (err) {
-      console.error("Failed to fetch history:", err)
+      console.error("Gagal mengambil riwayat:", err)
     } finally {
       setHistoryLoading(false)
     }
   }
 
   const handleOpenUpdateModal = (itemForUpdate) => {
+    setUpdateError('');
     setItemToUpdate(itemForUpdate)
     setIsUpdateModalOpen(true)
   }
 
-  const handleUpdateStatus = async (itemId, data) => {
+  const handleUpdateStatus = async (itemId, formData) => {
     setUpdateLoading(true)
+    setUpdateError('');
     try {
-      await axiosClient.patch(`/items/${itemId}/status`, data)
+      const response = await axiosClient.post(`/items/${itemId}/status`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      setItem(response.data.data);
       setIsUpdateModalOpen(false)
-      performSearch(`/items/scan/${item.barcode_path}`)
     } catch (err) {
-      console.error("Failed to update status:", err)
+      const message = err.response?.data?.message || 'Gagal mengubah status. Silakan coba lagi.';
+      setUpdateError(message);
+      console.error("Gagal mengubah status:", err.response?.data || err);
     } finally {
       setUpdateLoading(false)
     }
@@ -134,36 +140,28 @@ function HomePage() {
   return (
     <div className="min-h-screen bg-white">
       <Header />
-
-      {/* Modals */}
       {isScannerOpen && <BarcodeScanner onScanSuccess={handleScanSuccess} onClose={() => setIsScannerOpen(false)} />}
-      {isHistoryOpen && (
-        <HistoryModal history={historyData} loading={historyLoading} onClose={() => setIsHistoryOpen(false)} />
-      )}
+      {isHistoryOpen && (<HistoryModal history={historyData} loading={historyLoading} onClose={() => setIsHistoryOpen(false)} />)}
       {isUpdateModalOpen && (
         <UpdateStatusModal
           item={itemToUpdate}
           loading={updateLoading}
           onClose={() => setIsUpdateModalOpen(false)}
           onUpdate={handleUpdateStatus}
+          apiError={updateError}
         />
       )}
-
-      {/* Page Header */}
       <header className="border-b border-neutral-200">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <h1 className="text-4xl font-light tracking-tight text-neutral-900 mb-4">Item Status Checker</h1>
-            <p className="text-neutral-500 font-mono tracking-wide text-sm uppercase">
-              SCAN OR SEARCH TO VIEW ITEM STATUS
-            </p>
+            <p className="text-neutral-500 font-mono tracking-wide text-sm uppercase">SCAN OR SEARCH TO VIEW ITEM STATUS</p>
           </div>
         </div>
       </header>
-
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Search Section */}
         <div className="max-w-2xl mx-auto mb-14">
+          {/* PERBAIKAN: Mengembalikan isi form yang hilang */}
           <form onSubmit={handleManualSearch} className="relative">
             <div className="bg-neutral-50 border border-neutral-200 overflow-hidden">
               <div className="flex items-center pr-2">
@@ -177,8 +175,6 @@ function HomePage() {
                     className="w-full pl-12 pr-4 py-4 text-neutral-900 placeholder-neutral-400 bg-transparent focus:outline-none focus:ring-1 focus:ring-neutral-900 border-0"
                   />
                 </div>
-
-                {/* Action Buttons */}
                 <div className="flex items-center border-l border-neutral-200">
                   {searchTerm && (
                     <Button
@@ -191,7 +187,6 @@ function HomePage() {
                       <X className="h-5 w-5" />
                     </Button>
                   )}
-
                   <Button
                     variant="ghost"
                     size="icon"
@@ -201,7 +196,6 @@ function HomePage() {
                   >
                     <QrCode className="h-5 w-5" />
                   </Button>
-
                   <Button
                     type="submit"
                     disabled={loading || !searchTerm}
@@ -221,51 +215,14 @@ function HomePage() {
             </div>
           </form>
         </div>
-
-        {/* Results Section */}
         <div className="max-w-2xl mx-auto">
-          {/* Loading State */}
-          {loading && (
-            <div className="flex flex-col items-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-neutral-400 mb-6" />
-              <p className="text-neutral-500 font-mono text-sm tracking-wider uppercase">Searching Item</p>
-            </div>
-          )}
-
-          {/* Error State */}
-          {error && (
-            <div className="bg-red-50 border border-red-200 p-8 text-center">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <X className="w-6 h-6 text-red-600" />
-              </div>
-              <div className="text-red-900 font-medium mb-2 font-mono text-sm tracking-wider uppercase">Not Found</div>
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          )}
-
-          {/* Item Result */}
-          {item && (
-            <div className="bg-white border border-neutral-200">
-              <ItemCard item={item} onViewHistory={handleViewHistory} onUpdateStatus={handleOpenUpdateModal} />
-            </div>
-          )}
-
-          {/* Empty State */}
-          {!loading && !error && !item && (
-            <div className="text-center py-0">
-              
-              <div className="flex items-center justify-center gap-4 mt-8">
-                <Button variant="outline" onClick={() => setIsScannerOpen(true)} className="gap-2">
-                  <QrCode className="h-4 w-4" />
-                  <span className="font-mono text-xs tracking-wider">SCAN BARCODE</span>
-                </Button>
-              </div>
-            </div>
-          )}
+          {loading && ( <div className="flex flex-col items-center py-16"> <Loader2 className="w-8 h-8 animate-spin text-neutral-400 mb-6" /> <p className="text-neutral-500 font-mono text-sm tracking-wider uppercase">Searching Item</p> </div> )}
+          {error && ( <Alert message={error} /> )}
+          {item && ( <div className="bg-white border border-neutral-200"> <ItemCard item={item} onViewHistory={handleViewHistory} onUpdateStatus={handleOpenUpdateModal} /> </div> )}
+          {!loading && !error && !item && ( <div className="text-center py-0"> <div className="flex items-center justify-center gap-4 mt-8"> <button onClick={() => setIsScannerOpen(true)} className="gap-2 flex items-center justify-center font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-950 disabled:pointer-events-none disabled:opacity-50 border border-neutral-200 bg-white hover:bg-neutral-50 h-12 px-6 py-3"> <QrCode className="h-4 w-4" /> <span className="font-mono text-xs tracking-wider">SCAN BARCODE</span> </button> </div> </div> )}
         </div>
       </main>
     </div>
   )
 }
-
 export default HomePage

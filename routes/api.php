@@ -25,5 +25,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/items/scan/{barcode}', [ItemController::class, 'scan']);
     Route::get('/items/{kode}', [ItemController::class, 'show']);
     Route::get('/items/{kode}/history', [ItemController::class, 'history']);
-    Route::patch('/items/{id}/status', [ItemController::class, 'updateStatus']);
+    Route::post('/items/{id}/status', [ItemController::class, 'updateStatus']);
 });

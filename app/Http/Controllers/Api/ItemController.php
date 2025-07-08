@@ -7,28 +7,21 @@ use App\Models\Item;
 use App\Models\Status;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class ItemController extends Controller
 {
-    /**
-     * Display the specified item by its unique code.
-     * GET /api/items/{kode}
-     */
-
-     public function index(Request $request)
+    public function index(Request $request)
     {
         $query = Item::with(['category', 'location', 'latestStatus']);
-
-        // Fitur Pencarian
-        if ($request->has('search')) {
+        if ($request->has('search') && !empty($request->search)) {
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
-                $q->where('name', 'like', "%{$searchTerm}%")
-                  ->orWhere('code', 'like', "%{$searchTerm}%");
+                $q->where('name', 'like', "%{$searchTerm}%")->orWhere('code', 'like', "%{$searchTerm}%");
             });
         }
-
-        // -- LOGIKA FILTER BARU --
         if ($request->has('category_id') && !empty($request->category_id)) {
             $query->where('category_id', $request->category_id);
         }
@@ -40,83 +33,77 @@ class ItemController extends Controller
                 $q->where('status', $request->status);
             });
         }
-
-        // Fitur Pengurutan
         $sortBy = $request->get('sort_by', 'created_at');
         $sortDir = $request->get('sort_dir', 'desc');
         $query->orderBy($sortBy, $sortDir);
-
-        // Paginasi
-        $items = $query->paginate(15); // Tampilkan 15 item per halaman
-
+        $items = $query->paginate(15);
         return response()->json($items);
     }
 
     public function show($code)
     {
-        $item = Item::with(['category', 'location', 'latestStatus.user'])
-                    ->where('code', $code)
-                    ->first();
-
+        $item = Item::with(['category', 'location', 'latestStatus.user'])->where('code', $code)->first();
         if (!$item) {
             return response()->json(['message' => 'Barang tidak ditemukan'], 404);
         }
-
         return response()->json($item);
     }
 
-    /**
-     * Display the specified item by its barcode.
-     * GET /api/items/scan/{barcode}
-     */
     public function scan($barcode)
     {
-        $item = Item::with(['category', 'location', 'latestStatus.user'])
-                    ->where('barcode_path', $barcode)
-                    ->first();
-
+        $item = Item::with(['category', 'location', 'latestStatus.user'])->where('barcode_path', $barcode)->first();
         if (!$item) {
             return response()->json(['message' => 'Barcode tidak valid atau barang tidak ditemukan'], 404);
         }
-
         return response()->json($item);
     }
 
-    /**
-     * Display the status history for a specific item.
-     * GET /api/items/{kode}/history
-     */
     public function history($code)
     {
         $item = Item::where('code', $code)->firstOrFail();
         $history = $item->statuses()->with('user')->get();
-
         return response()->json($history);
     }
 
-    /**
-     * Update the status of a specific item.
-     * PATCH /api/items/{id}/status
-     */
     public function updateStatus(Request $request, $id)
     {
-        $request->validate([
-            'status' => 'required|string|in:Baik,Rusak,Hilang,Perbaikan,Dipinjam,Rusak Total',
-            'note' => 'nullable|string|max:255',
-        ]);
+        try {
+            $validated = $request->validate([
+                'status' => 'required|string|in:Baik,Rusak,Hilang,Perbaikan,Dipinjam,Rusak Total',
+                'note' => 'nullable|string|max:255',
+                'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            ]);
 
-        $item = Item::findOrFail($id);
+            $item = Item::findOrFail($id);
+            $photoPath = null;
 
-        $newStatus = Status::create([
-            'item_id' => $item->id,
-            'status' => $request->status,
-            'note' => $request->note,
-            'user_id' => Auth::id(),
-        ]);
+            if ($request->hasFile('photo')) {
+                $photoPath = $request->file('photo')->store('status_photos', 'public');
+            }
 
-        return response()->json([
-            'message' => 'Status barang berhasil diperbarui',
-            'data' => $newStatus->load('user'),
-        ]);
+            DB::transaction(function () use ($item, $validated, $photoPath) {
+                $item->statuses()->create([
+                    'status' => $validated['status'],
+                    'note' => $validated['note'] ?? null,
+                    'user_id' => Auth::id(),
+                    'photo_path' => $photoPath,
+                ]);
+            });
+
+            // Gunakan ->load() yang lebih andal daripada ->fresh()
+            $item->load(['category', 'location', 'latestStatus.user']);
+
+            return response()->json([
+                'message' => 'Status barang berhasil diperbarui',
+                'data' => $item,
+            ]);
+
+        } catch (Throwable $e) {
+            // Jika terjadi error apapun, catat dan kirim respons error yang detail
+            Log::error('Gagal update status: ' . $e->getMessage());
+            return response()->json([
+                'message' => 'Terjadi kesalahan di server: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

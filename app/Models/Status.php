@@ -13,6 +13,7 @@ class Status extends Model
         'item_id',
         'status',
         'user_id',
+        'photo_path',
         'note'
     ];
 

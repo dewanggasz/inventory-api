@@ -68,6 +68,7 @@ function ItemCard({ item, onViewHistory, onUpdateStatus }) {
 
   const { name, code, category, location } = item
   const latestStatus = item.latest_status
+  const storageUrl = 'http://127.0.0.1:8000/storage/'; // URL ke folder storage
 
   return (
     <div className="w-full bg-white border border-neutral-200 overflow-hidden">
@@ -90,6 +91,19 @@ function ItemCard({ item, onViewHistory, onUpdateStatus }) {
 
       {/* Content Section */}
       <div className="p-8">
+        {/* --- BLOK UNTUK MENAMPILKAN FOTO --- */}
+        {latestStatus?.photo_path && (
+            <div className="mb-8">
+                <p className="text-xs font-mono text-neutral-400 tracking-wider uppercase mb-2">Foto Bukti</p>
+                <img 
+                    src={storageUrl + latestStatus.photo_path} 
+                    alt={`Foto status ${latestStatus.status}`}
+                    className="w-full h-auto max-h-80 object-cover rounded-lg border border-neutral-200"
+                />
+            </div>
+        )}
+        {/* ----------------------------------- */}
+
         {/* Basic Info Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
           <div className="space-y-2">

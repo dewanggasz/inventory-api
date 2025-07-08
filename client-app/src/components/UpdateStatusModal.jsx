@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { X, Loader2, Edit } from "lucide-react"
+import { X, Loader2, Edit, Upload } from "lucide-react"
 
 // Utility function for class names
 const cn = (...classes) => {
@@ -76,19 +76,36 @@ const Textarea = ({ className = "", ...props }) => (
 const statusOptions = ["Baik", "Hilang", "Perbaikan", "Dipinjam", "Rusak", "Rusak Total"]
 
 function UpdateStatusModal({ item, onClose, onUpdate, loading }) {
-  const [newStatus, setNewStatus] = useState(item.latestStatus?.status || "Baik")
+  const [newStatus, setNewStatus] = useState(item.latest_status?.status || "Baik")
   const [note, setNote] = useState("")
+  const [photo, setPhoto] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setPhoto(file);
+      setPhotoPreview(URL.createObjectURL(file));
+    }
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onUpdate(item.id, { status: newStatus, note })
+    const formData = new FormData();
+    formData.append('status', newStatus);
+    formData.append('note', note);
+    if (photo) {
+      formData.append('photo', photo);
+    }
+    onUpdate(item.id, formData);
   }
 
   return (
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
-      <div className="bg-white border border-neutral-200 w-full max-w-md">
+      {/* PERBAIKAN: Tambahkan flex flex-col dan max-h-[90vh] */}
+      <div className="bg-white border border-neutral-200 w-full max-w-md flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-8 py-6 border-b border-neutral-200">
+        <div className="px-8 py-6 border-b border-neutral-200 flex-shrink-0">
           <div className="flex justify-between items-start">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-2">
@@ -105,8 +122,9 @@ function UpdateStatusModal({ item, onClose, onUpdate, loading }) {
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <div className="px-8 py-6 space-y-6">
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+          {/* PERBAIKAN: Buat area konten bisa di-scroll */}
+          <div className="px-8 py-6 space-y-6 overflow-y-auto flex-1">
             {/* Status Selection */}
             <div className="space-y-3">
               <label htmlFor="status" className="block text-xs font-mono text-neutral-400 tracking-wider uppercase">
@@ -134,10 +152,27 @@ function UpdateStatusModal({ item, onClose, onUpdate, loading }) {
                 placeholder="Add any relevant notes about the status change..."
               />
             </div>
+
+            {/* Photo Upload */}
+            <div className="space-y-3">
+                <label htmlFor="photo-upload" className="block text-xs font-mono text-neutral-400 tracking-wider uppercase">
+                    Photo Evidence (Optional)
+                </label>
+                <div className="flex items-center gap-4">
+                    {photoPreview && (
+                        <img src={photoPreview} alt="Preview" className="w-20 h-20 object-cover border border-neutral-200" />
+                    )}
+                    <label htmlFor="photo-upload" className="flex-1 cursor-pointer border border-dashed border-neutral-300 p-4 text-center text-neutral-500 hover:bg-neutral-50">
+                        <Upload className="h-6 w-6 mx-auto mb-2 text-neutral-400" />
+                        <span className="text-sm">Click to upload a photo</span>
+                    </label>
+                    <input id="photo-upload" type="file" className="hidden" onChange={handlePhotoChange} accept="image/*" />
+                </div>
+            </div>
           </div>
 
           {/* Footer */}
-          <div className="px-8 py-6 border-t border-neutral-200 bg-neutral-50">
+          <div className="px-8 py-6 border-t border-neutral-200 bg-neutral-50 flex-shrink-0">
             <div className="flex gap-3">
               <Button variant="outline" onClick={onClose} className="flex-1 bg-transparent">
                 <span className="font-mono text-xs tracking-wider uppercase">Cancel</span>
