@@ -1,61 +1,118 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Aplikasi Inventory Barang 🚀
+Aplikasi web modern untuk melacak dan mengelola aset atau barang dalam sebuah organisasi. Sistem ini memungkinkan pelacakan status setiap barang (misalnya Baik, Rusak, Dipinjam) secara real-time melalui kode unik dan pemindaian barcode.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## ✨ Fitur Utama
+Aplikasi ini terdiri dari dua bagian utama dengan fungsionalitas yang berbeda:
 
-## About Laravel
+## 📱 Aplikasi Pengguna (Frontend - React)
+Diakses oleh staf operasional di lapangan.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+    - Otentikasi Aman: Login menggunakan token Laravel Sanctum.
+    - Pencarian Cepat: Cari barang dengan mengetik kode manual, memindai barcode via kamera, atau unggah gambar.
+    - Daftar Barang Interaktif: Tampilan data dalam bentuk tabel (desktop) dan kartu (mobile) yang responsif.
+    - Filter & Urutkan Data: Cari, filter per kategori/lokasi/status, dan urutkan data dengan mudah.
+    - Update Status: Ubah status barang, tambahkan catatan, dan unggah foto bukti melalui modal interaktif.
+    - Riwayat Lengkap: Lihat seluruh riwayat perubahan status untuk setiap barang.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🖥️ Panel Admin (Backend - Filament)
+Diakses oleh administrator untuk manajemen data menyeluruh.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+    - Dashboard Informatif:
+        - Statistik jumlah barang berdasarkan status dengan filter per periode (tahun/bulan).
+        - Diagram garis untuk tren perubahan status barang.
+        - Diagram batang untuk pertumbuhan total aset aktif.
 
-## Learning Laravel
+    - Manajemen Data (CRUD): Kelola data master untuk Barang, Kategori, Lokasi, dan Pengguna.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+    - Generate Otomatis: Kode unik dan barcode di-generate secara otomatis saat membuat barang baru.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+    - Manajemen Pengguna: Atur peran pengguna (admin/user) dan reset password.
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+    - Fitur Ekstra:
 
-## Laravel Sponsors
+        - Cetak Label Barcode dalam format PDF (satu per satu atau massal).
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+        - Unduh QR Code sebagai gambar PNG.
 
-### Premium Partners
+        - Ekspor Data barang ke format Excel.
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+## 💻 Teknologi yang Digunakan
+Arsitektur aplikasi memisahkan frontend dan backend yang berkomunikasi melalui API.
 
-## Contributing
+# Frontend (Aplikasi Pengguna)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+    - Framework: ```React.js```
 
-## Code of Conduct
+    - Build Tool: ```Vite```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+    - Styling: ```Tailwind CSS``` & ```CSS Native```
 
-## Security Vulnerabilities
+    - HTTP Client: ```Axios```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+    - Routing: ```React Router DOM```
 
-## License
+    - State Management: ```React Context``` & ```Hooks```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Backend (API & Panel Admin)
+
+    - Framework: ```Laravel 12```
+
+    - Panel Admin: ```Filament 3.x```
+
+    - Otentikasi API: ```Laravel Sanctum```
+
+    - Database: ```MySQL```
+
+## ⚙️ Instalasi & Menjalankan Lokal
+Berikut adalah panduan untuk menjalankan aplikasi ini di lingkungan lokal.
+
+# 1. Backend (Laravel)
+Clone repositori dan masuk ke direktori proyek.
+
+```bash
+    # Clone repositori
+    git clone https://github.com/username/repo-name.git
+    cd repo-name
+
+    # Install dependensi PHP
+    composer install
+
+    # Setup file environment
+    cp .env.example .env
+    # --- (Konfigurasi koneksi database di file .env) ---
+
+    # Generate application key
+    php artisan key:generate
+
+    # Migrasi database dan jalankan seeder
+    php artisan migrate --seed
+
+    # Buat symbolic link untuk storage
+    php artisan storage:link
+```
+
+2. Frontend (React)
+Masuk ke direktori aplikasi React.
+
+# Masuk ke direktori frontend
+cd client-app
+
+# Install dependensi JavaScript
+npm install
+
+# Buat file environment dan isi URL API backend
+cp .env.example .env
+# --- (Isi VITE_API_BASE_URL=http://127.0.0.1:8000 di file .env) ---
+
+3. Menjalankan Server
+Jalankan kedua server secara bersamaan di terminal yang berbeda.
+
+Jalankan Backend Laravel:
+
+php artisan serve
+
+Jalankan Frontend React:
+
+npm run dev
+
+Aplikasi pengguna akan tersedia di http://localhost:5173 (atau port lain yang ditampilkan) dan panel admin di http://127.0.0.1:8000/admin.
