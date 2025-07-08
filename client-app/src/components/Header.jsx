@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { useAuth } from "../context/AuthContext"
 import { Link } from "react-router-dom"
-import { LogOut, User, LayoutDashboard, Menu, X, Archive } from "lucide-react"
+import { LogOut, User, LayoutDashboard, Menu, X, Archive, QrCode } from "lucide-react"
 
 // Utility function for class names
 const cn = (...classes) => {
@@ -96,6 +96,11 @@ function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
+            <NavLink to="/">
+              <QrCode className="h-4 w-4" />
+              <span className="font-mono text-xs tracking-wider uppercase">Scanner</span>
+            </NavLink>
+
             <NavLink to="/items">
               <Archive className="h-4 w-4" />
               <span className="font-mono text-xs tracking-wider uppercase">Items</span>
@@ -155,6 +160,15 @@ function Header() {
             </div>
 
             {/* Mobile Navigation Links */}
+            <Link
+              to="/"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="flex items-center w-full bg-white hover:bg-neutral-50 text-neutral-700 hover:text-neutral-900 font-medium py-3 px-4 transition-colors border border-neutral-200 gap-3"
+            >
+              <QrCode className="h-4 w-4" />
+              <span className="font-mono text-xs tracking-wider uppercase">Barcode Scanner</span>
+            </Link>
+
             <Link
               to="/items"
               onClick={() => setIsMobileMenuOpen(false)}

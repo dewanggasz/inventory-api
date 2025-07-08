@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useSearchParams } from "react-router-dom"
 import axiosClient from "../api/axiosClient"
 import Header from "../components/Header"
@@ -108,11 +108,45 @@ function ItemsListPage() {
   const [categories, setCategories] = useState([])
   const [locations, setLocations] = useState([])
 
+  const [searchTerm, setSearchTerm] = useState("")
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("")
+  const searchTimeoutRef = useRef(null)
+
   // Fetch data untuk dropdown filter
   useEffect(() => {
     axiosClient.get("/categories").then(({ data }) => setCategories(data))
     axiosClient.get("/locations").then(({ data }) => setLocations(data))
   }, [])
+
+  // Debounce search term
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current)
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+    }, 500) // 500ms delay
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current)
+      }
+    }
+  }, [searchTerm])
+
+  // Update URL when debounced search term changes
+  useEffect(() => {
+    setSearchParams((prev) => {
+      if (debouncedSearchTerm) {
+        prev.set("search", debouncedSearchTerm)
+      } else {
+        prev.delete("search")
+      }
+      prev.set("page", "1")
+      return prev
+    })
+  }, [debouncedSearchTerm, setSearchParams])
 
   const fetchItems = useCallback(() => {
     setLoading(true)
@@ -138,6 +172,11 @@ function ItemsListPage() {
 
   // Fungsi generik untuk menangani perubahan filter
   const handleFilterChange = (key, value) => {
+    if (key === "search") {
+      setSearchTerm(value)
+      return
+    }
+
     setSearchParams((prev) => {
       if (value) {
         prev.set(key, value)
@@ -235,10 +274,15 @@ function ItemsListPage() {
                   type="text"
                   placeholder="Search items..."
                   onChange={(e) => handleFilterChange("search", e.target.value)}
-                  value={searchParams.get("search") || ""}
-                  className="w-full pl-12 pr-4 py-3 border-0 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none transition-all h-12 text-sm"
+                  value={searchTerm}
+                  className="w-full pl-12 pr-12 py-3 border-0 bg-white focus:ring-1 focus:ring-neutral-900 focus:outline-none transition-all h-12 text-sm"
                 />
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400" />
+                {searchTerm !== debouncedSearchTerm && (
+                  <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-neutral-300 border-t-neutral-600 rounded-full animate-spin"></div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -289,9 +333,9 @@ function ItemsListPage() {
           {hasActiveFilters && (
             <div className="flex flex-wrap items-center gap-2 pt-4 mt-4 border-t border-neutral-200">
               <span className="text-xs text-neutral-400 font-mono tracking-wider">ACTIVE FILTERS:</span>
-              {searchParams.get("search") && (
+              {debouncedSearchTerm && (
                 <Badge variant="outline" className="text-xs">
-                  Search: {searchParams.get("search")}
+                  Search: {debouncedSearchTerm}
                 </Badge>
               )}
               {searchParams.get("category_id") && (

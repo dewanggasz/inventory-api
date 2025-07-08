@@ -166,7 +166,7 @@ function HomePage() {
         <div className="max-w-2xl mx-auto mb-14">
           <form onSubmit={handleManualSearch} className="relative">
             <div className="bg-neutral-50 border border-neutral-200 overflow-hidden">
-              <div className="flex items-center">
+              <div className="flex items-center pr-2">
                 <div className="flex-1 relative">
                   <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-neutral-400 w-5 h-5" />
                   <input
