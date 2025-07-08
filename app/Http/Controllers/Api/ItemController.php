@@ -72,6 +72,7 @@ class ItemController extends Controller
                 'status' => 'required|string|in:Baik,Rusak,Hilang,Perbaikan,Dipinjam,Rusak Total',
                 'note' => 'nullable|string|max:255',
                 'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'location_id' => 'nullable|exists:locations,id', // <-- Validasi baru
             ]);
 
             $item = Item::findOrFail($id);
@@ -81,16 +82,22 @@ class ItemController extends Controller
                 $photoPath = $request->file('photo')->store('status_photos', 'public');
             }
 
-            DB::transaction(function () use ($item, $validated, $photoPath) {
+            DB::transaction(function () use ($item, $validated, $photoPath, $request) {
+                // Buat record status baru
                 $item->statuses()->create([
                     'status' => $validated['status'],
                     'note' => $validated['note'] ?? null,
                     'user_id' => Auth::id(),
                     'photo_path' => $photoPath,
                 ]);
+
+                // -- LOGIKA BARU: Update lokasi jika ada --
+                if ($request->filled('location_id')) {
+                    $item->location_id = $validated['location_id'];
+                    $item->save();
+                }
             });
 
-            // Gunakan ->load() yang lebih andal daripada ->fresh()
             $item->load(['category', 'location', 'latestStatus.user']);
 
             return response()->json([
@@ -99,11 +106,8 @@ class ItemController extends Controller
             ]);
 
         } catch (Throwable $e) {
-            // Jika terjadi error apapun, catat dan kirim respons error yang detail
             Log::error('Gagal update status: ' . $e->getMessage());
-            return response()->json([
-                'message' => 'Terjadi kesalahan di server: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['message' => 'Terjadi kesalahan di server: ' . $e->getMessage()], 500);
         }
     }
 }

@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
-import { X, Loader2, Edit, Upload } from "lucide-react"
+import { useState, useEffect } from "react"
+import axiosClient from "../api/axiosClient"
+import { X, Loader2, Edit, Upload, MapPin } from "lucide-react"
 
 // Utility function for class names
 const cn = (...classes) => {
@@ -80,6 +81,19 @@ function UpdateStatusModal({ item, onClose, onUpdate, loading }) {
   const [note, setNote] = useState("")
   const [photo, setPhoto] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
+  
+  // Logika baru untuk lokasi
+  const [locations, setLocations] = useState([]);
+  const [newLocationId, setNewLocationId] = useState(item.location_id);
+
+  useEffect(() => {
+    axiosClient.get('/locations')
+      .then(({ data }) => {
+        setLocations(data);
+      })
+      .catch(err => console.error("Gagal mengambil lokasi:", err));
+  }, []);
+  // ---------------------------------
 
   const handlePhotoChange = (e) => {
     const file = e.target.files[0];
@@ -94,6 +108,7 @@ function UpdateStatusModal({ item, onClose, onUpdate, loading }) {
     const formData = new FormData();
     formData.append('status', newStatus);
     formData.append('note', note);
+    formData.append('location_id', newLocationId); // <-- Tambahkan location_id
     if (photo) {
       formData.append('photo', photo);
     }
@@ -102,7 +117,6 @@ function UpdateStatusModal({ item, onClose, onUpdate, loading }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex justify-center items-center z-50 p-4">
-      {/* PERBAIKAN: Tambahkan flex flex-col dan max-h-[90vh] */}
       <div className="bg-white border border-neutral-200 w-full max-w-md flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="px-8 py-6 border-b border-neutral-200 flex-shrink-0">
@@ -123,7 +137,6 @@ function UpdateStatusModal({ item, onClose, onUpdate, loading }) {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
-          {/* PERBAIKAN: Buat area konten bisa di-scroll */}
           <div className="px-8 py-6 space-y-6 overflow-y-auto flex-1">
             {/* Status Selection */}
             <div className="space-y-3">
@@ -138,6 +151,24 @@ function UpdateStatusModal({ item, onClose, onUpdate, loading }) {
                 ))}
               </Select>
             </div>
+
+            {/* Dropdown Lokasi Baru */}
+            <div className="space-y-3">
+              <label htmlFor="location" className="block text-xs font-mono text-neutral-400 tracking-wider uppercase">
+                Pindahkan Lokasi (Opsional)
+              </label>
+              <div className="relative">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                <Select id="location" value={newLocationId} onChange={(e) => setNewLocationId(e.target.value)} className="pl-12">
+                  {locations.map((loc) => (
+                    <option key={loc.id} value={loc.id}>
+                      {loc.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            </div>
+            {/* --------------------------- */}
 
             {/* Notes */}
             <div className="space-y-3">
@@ -179,7 +210,7 @@ function UpdateStatusModal({ item, onClose, onUpdate, loading }) {
               </Button>
               <Button type="submit" disabled={loading} className="flex-1">
                 {loading ? (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-center gap-2">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="font-mono text-xs tracking-wider uppercase">Saving</span>
                   </div>
