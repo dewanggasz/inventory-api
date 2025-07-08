@@ -111,10 +111,10 @@ Jalankan kedua server secara bersamaan di terminal yang berbeda.
 
 - Jalankan Backend Laravel:
 
-```php artisan serve```
+    ```php artisan serve```
 
 - Jalankan Frontend React:
 
-```npm run dev```
+    ```npm run dev```
 
 Aplikasi pengguna akan tersedia di ```http://localhost:5173``` (atau port lain yang ditampilkan) dan panel admin di ```http://127.0.0.1:8000/admin```.
