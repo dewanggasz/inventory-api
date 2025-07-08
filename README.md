@@ -4,7 +4,7 @@ Aplikasi web modern untuk melacak dan mengelola aset atau barang dalam sebuah or
 ## ✨ Fitur Utama
 Aplikasi ini terdiri dari dua bagian utama dengan fungsionalitas yang berbeda:
 
-# 📱 Aplikasi Pengguna (Frontend - React)
+### 📱 Aplikasi Pengguna (Frontend - React)
 Diakses oleh staf operasional di lapangan.
 
     - Otentikasi Aman: Login menggunakan token Laravel Sanctum.
@@ -14,7 +14,7 @@ Diakses oleh staf operasional di lapangan.
     - Update Status: Ubah status barang, tambahkan catatan, dan unggah foto bukti melalui modal interaktif.
     - Riwayat Lengkap: Lihat seluruh riwayat perubahan status untuk setiap barang.
 
-## 🖥️ Panel Admin (Backend - Filament)
+### 🖥️ Panel Admin (Backend - Filament)
 Diakses oleh administrator untuk manajemen data menyeluruh.
 
     - Dashboard Informatif:
@@ -36,10 +36,10 @@ Diakses oleh administrator untuk manajemen data menyeluruh.
 
         - Ekspor Data barang ke format Excel.
 
-## 💻 Teknologi yang Digunakan
+### 💻 Teknologi yang Digunakan
 Arsitektur aplikasi memisahkan frontend dan backend yang berkomunikasi melalui API.
 
-### Frontend (Aplikasi Pengguna)
+#### Frontend (Aplikasi Pengguna)
 
 - Framework: ```React.js```
 
@@ -53,7 +53,7 @@ Arsitektur aplikasi memisahkan frontend dan backend yang berkomunikasi melalui A
 
 - State Management: ```React Context``` & ```Hooks```
 
-### Backend (API & Panel Admin)
+#### Backend (API & Panel Admin)
 
 - Framework: ```Laravel 12```
 
@@ -66,7 +66,7 @@ Arsitektur aplikasi memisahkan frontend dan backend yang berkomunikasi melalui A
 ## ⚙️ Instalasi & Menjalankan Lokal
 Berikut adalah panduan untuk menjalankan aplikasi ini di lingkungan lokal.
 
-# 1. Backend (Laravel)
+#### 1. Backend (Laravel)
 Clone repositori dan masuk ke direktori proyek.
 
 ```bash
@@ -91,9 +91,10 @@ Clone repositori dan masuk ke direktori proyek.
     php artisan storage:link
 ```
 
-2. Frontend (React)
+#### 2. Frontend (React)
 Masuk ke direktori aplikasi React.
 
+```bash
 # Masuk ke direktori frontend
 cd client-app
 
@@ -103,16 +104,17 @@ npm install
 # Buat file environment dan isi URL API backend
 cp .env.example .env
 # --- (Isi VITE_API_BASE_URL=http://127.0.0.1:8000 di file .env) ---
+```
 
-3. Menjalankan Server
+#### 3. Menjalankan Server
 Jalankan kedua server secara bersamaan di terminal yang berbeda.
 
-Jalankan Backend Laravel:
+- Jalankan Backend Laravel:
 
-php artisan serve
+```php artisan serve```
 
-Jalankan Frontend React:
+- Jalankan Frontend React:
 
-npm run dev
+```npm run dev```
 
-Aplikasi pengguna akan tersedia di http://localhost:5173 (atau port lain yang ditampilkan) dan panel admin di http://127.0.0.1:8000/admin.
+Aplikasi pengguna akan tersedia di ```http://localhost:5173``` (atau port lain yang ditampilkan) dan panel admin di ```http://127.0.0.1:8000/admin```.
