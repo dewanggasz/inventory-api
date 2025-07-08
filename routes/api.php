@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\ItemController;
 use App\Http\Controllers\Api\CategoryController; // <-- Impor controller baru
 use App\Http\Controllers\Api\LocationController; // <-- Impor controller baru
 
+
 // Rute publik untuk login
 Route::post('/login', [AuthController::class, 'login']);
 
